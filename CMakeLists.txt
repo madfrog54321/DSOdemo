@@ -7,7 +7,7 @@ include_directories(/usr/include/uWS)
 include_directories( ${ZLIB_INCLUDE_DIRS})
 
 set(CMAKE_CXX_FLAGS
-   "${SSE_FLAGS} -O3 -g -std=c++0x -march=native"
+   "${SSE_FLAGS} -O3 -g -std=c++0x -march=native -pthread"
 #   "${SSE_FLAGS} -O3 -g -std=c++0x -fno-omit-frame-pointer"
 )
 
