@@ -1,0 +1,6 @@
+[submodule "dso"]
+	path = dso
+	url = https://github.com/JakobEngel/dso.git
+[submodule "uWebSockets"]
+	path = uWebSockets
+	url = https://github.com/uWebSockets/uWebSockets.git
