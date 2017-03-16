@@ -46,8 +46,6 @@
 #include "FullSystem/PixelSelector2.h"
 
 
-
-#include "IOWrapper/Pangolin/PangolinDSOViewer.h"
 #include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
 
 
@@ -401,12 +399,12 @@ int main( int argc, char** argv )
 
 
 
-    IOWrap::PangolinDSOViewer* viewer = 0;
-	if(!disableAllDisplay)
-    {
-        viewer = new IOWrap::PangolinDSOViewer(wG[0],hG[0], false);
-        fullSystem->outputWrapper.push_back(viewer);
-    }
+    //IOWrap::PangolinDSOViewer* viewer = 0;
+	  //if(!disableAllDisplay)
+    //{
+    //    viewer = new IOWrap::PangolinDSOViewer(wG[0],hG[0], false);
+    //    fullSystem->outputWrapper.push_back(viewer);
+    //}
 
 
 
@@ -565,8 +563,8 @@ int main( int argc, char** argv )
     });
 
 
-    if(viewer != 0)
-        viewer->run();
+    //if(viewer != 0)
+    //    viewer->run();
 
     runthread.join();
 
