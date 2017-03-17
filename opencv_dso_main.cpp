@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <thread>
+#include <iostream>
+
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <uWS/uWS.h>
 #include "WebOutputWrapper.cpp"
@@ -27,12 +32,14 @@ std::string vignetteFile = "";
 std::string gammaFile = "";
 bool useSampleOutput=true;
 
+using namespace cv;
 using namespace dso;
 
 FullSystem* fullSystem = 0;
 Undistort* undistorter = 0;
 int frameID = 0;
 
+/*
 void vidCb(const sensor_msgs::ImageConstPtr img)
 {
 	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::MONO8);
@@ -60,16 +67,41 @@ void vidCb(const sensor_msgs::ImageConstPtr img)
 	delete undistImg;
 
 }
+*/
 
+uWS::Hub h;
 
+void startServer()
+{
+  h.onMessage([](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode opCode) {
+      if (length && message[0] != 'S' && length < 4096) {
+          // add this message to the store, cut off old messages
+          std::cout << "Message posted: " << std::string(message, length) << std::endl;
+      }
+      ws.send(message, length, opCode);
+  });
 
+  h.onHttpRequest([](uWS::HttpResponse *res, uWS::HttpRequest req, char *data, size_t length, size_t remainingBytes) {
+      res->end("", 0);
+  });
 
+  h.listen(9090);
+  h.run();
+}
 
 int main( int argc, char** argv )
 {
-	ros::init(argc, argv, "dso_live");
 
-  calib = "";
+  VideoCapture stream1(-1);   //0 is the id of video device.0 if you have only one camera.
+
+  if (!stream1.isOpened()) { //check if video device has been initialised
+    std::cout << "cannot open camera" << std::endl;
+  }
+
+  std::thread server(startServer);
+	//ros::init(argc, argv, "dso_live");
+
+  calib = "camera.txt";
   vignetteFile = "";
   gammaFile = "";
   multiThreading = false;
@@ -77,7 +109,7 @@ int main( int argc, char** argv )
   setting_logStuff = false;
   setting_debugout_runquiet = true;
 
-	for(int i=1; i<argc;i++) parseArgument(argv[i]);
+	//for(int i=1; i<argc;i++) parseArgument(argv[i]);
 
 
 	setting_desiredImmatureDensity = 1000;
@@ -91,7 +123,7 @@ int main( int argc, char** argv )
 
 
 	printf("MODE WITH CALIBRATION, but without exposure times!\n");
-	setting_photometricCalibration = 2;
+	setting_photometricCalibration = 0; // 2 for calibration
 	setting_affineOptModeA = 0;
 	setting_affineOptModeB = 0;
 
@@ -108,24 +140,30 @@ int main( int argc, char** argv )
     fullSystem = new FullSystem();
     fullSystem->linearizeOperation=false;
 
-
-    if(!disableAllDisplay)
-	    fullSystem->outputWrapper.push_back(new IOWrap::PangolinDSOViewer(
-	    		 (int)undistorter->getSize()[0],
-	    		 (int)undistorter->getSize()[1]));
-
-
-    if(useSampleOutput)
-        fullSystem->outputWrapper.push_back(new IOWrap::SampleOutputWrapper());
+    fullSystem->outputWrapper.push_back(new IOWrap::WebOutputWrapper(&h));
 
 
     if(undistorter->photometricUndist != 0)
     	fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
 
-    ros::NodeHandle nh;
-    ros::Subscriber imgSub = nh.subscribe("image", 1, &vidCb);
+    //ros::NodeHandle nh;
+    //ros::Subscriber imgSub = nh.subscribe("image", 1, &vidCb);
 
-    ros::spin();
+    while(true){
+      Mat cameraFrame;
+      stream1.read(cameraFrame);
+
+      MinimalImageB minImg((int)cameraFrame.cols, (int)cameraFrame.rows,(unsigned char*)cameraFrame.data);
+    	ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, 1,0, 1.0f);
+    	fullSystem->addActiveFrame(undistImg, frameID);
+    	frameID++;
+    	delete undistImg;
+
+      if(waitKey(30) >= 0)
+        break;
+    }
+
+    //ros::spin();
 
     for(IOWrap::Output3DWrapper* ow : fullSystem->outputWrapper)
     {
