@@ -49,7 +49,8 @@ function draw() {
   beginShape();
   stroke(200);
   strokeWeight(10);
-  for(var i = 0; i < points.length; i++){
+  var delta = 1 + floor(points.length / 100);
+  for(var i = 0; i < points.length; i+=delta){
     translate(points[i][0], points[i][1], points[i][2]);
     sphere(2);
     translate(-points[i][0], -points[i][1], -points[i][2]);
