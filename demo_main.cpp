@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <uWS/uWS.h>
+#include "WebOutputWrapper.cpp"
+
 #include "IOWrapper/Output3DWrapper.h"
 #include "IOWrapper/ImageDisplay.h"
 
@@ -347,11 +350,30 @@ void parseArgument(char* arg)
 	printf("could not parse argument \"%s\"!!!!\n", arg);
 }
 
+uWS::Hub h;
 
+void startServer()
+{
+  h.onMessage([](uWS::WebSocket<uWS::SERVER> ws, char *message, size_t length, uWS::OpCode opCode) {
+      if (length && message[0] != 'S' && length < 4096) {
+          // add this message to the store, cut off old messages
+          std::cout << "Message posted: " << std::string(message, length) << std::endl;
+      }
+      ws.send(message, length, opCode);
+  });
+
+  h.onHttpRequest([](uWS::HttpResponse *res, uWS::HttpRequest req, char *data, size_t length, size_t remainingBytes) {
+      res->end("", 0);
+  });
+
+  h.listen(9090);
+  h.run();
+}
 
 int main( int argc, char** argv )
 {
 	//setlocale(LC_ALL, "");
+  std::thread server(startServer);
 
 	for(int i=1; i<argc;i++)
 		parseArgument(argv[i]);
@@ -409,7 +431,7 @@ int main( int argc, char** argv )
 
 
     if(useSampleOutput)
-        fullSystem->outputWrapper.push_back(new IOWrap::SampleOutputWrapper());
+        fullSystem->outputWrapper.push_back(new IOWrap::WebOutputWrapper(&h));
 
 
 
@@ -575,6 +597,7 @@ int main( int argc, char** argv )
 	}
 
 
+  server.join();
 
 	printf("DELETE FULLSYSTEM!\n");
 	delete fullSystem;

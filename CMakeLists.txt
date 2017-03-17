@@ -26,5 +26,5 @@ set(CMAKE_CXX_FLAGS
 #   "${SSE_FLAGS} -O3 -g -std=c++0x -fno-omit-frame-pointer"
 )
 
-add_executable(demo demo_main.cpp)
+add_executable(demo demo_main.cpp WebOutputWrapper.cpp)
 target_link_libraries(demo /mnt/c/Users/konno/Documents/GitKraken/DSOdemo/dso/build/lib/libdso.a /usr/lib/libuWS.so ${LIBZIP_LIBRARY} boost_system ${OpenCV_LIBS} boost_thread -lssl -lcrypt ${ZLIB_LIBRARIES})
