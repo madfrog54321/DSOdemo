@@ -122,8 +122,7 @@ uWS::Hub* h;
             std::cout << "Y: " << frame->camToWorld.matrix3x4()(1, 3) << std::endl;
             std::cout << "Z: " << frame->camToWorld.matrix3x4()(2, 3) << std::endl;
 */
-            std::string message = std::to_string(frame->camToWorld.matrix3x4()(0, 3)) + "," + std::to_string(frame->camToWorld.matrix3x4()(1, 3)) + "," + std::to_string(frame->camToWorld.matrix3x4()(2itKraken
-            , 3));
+            std::string message = std::to_string(frame->camToWorld.matrix3x4()(0, 3)) + "," + std::to_string(frame->camToWorld.matrix3x4()(1, 3)) + "," + std::to_string(frame->camToWorld.matrix3x4()(2, 3));
             h->getDefaultGroup<uWS::SERVER>().broadcast(message.c_str(), message.length(), uWS::TEXT);
 
             //std::cout << "========== Pose End =========" << std::endl;
