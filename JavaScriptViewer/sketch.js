@@ -2,20 +2,49 @@ var x = 0, y = 0, z=0;
 var socket;
 var shutdown = false;
 var points = [];
-var rotX= 0;
+var rotX= 0, rotXold = 0;
+var rotY= 0, rotYold = 0;
+var rotZ= 0, rotZold = 0;
+var mouseDownX = 0, mouseDownY = 0;
 
 function setup() {
-  createCanvas(500, 500, WEBGL);
+  createCanvas(700, 700, WEBGL);
+}
+
+function mousePressed() {
+  rotXold = rotX;
+  rotYold = rotY;
+  rotZold = rotZ;
+  mouseDownX = mouseX;
+  mouseDownY = mouseY;
+}
+
+function mouseDragged(){
+  rotY = (mouseX- mouseDownX) * 0.01 + rotYold;
+  rotX = (mouseY- mouseDownY) * 0.01 + rotXold;
 }
 
 function draw() {
   //translate(250, 250);
-  background(200);
+  background(220);
   //noFill();
   
-  rotX += 0.01;
   rotateX(rotX);
-  rotateY(rotX);
+  rotateY(rotY);
+  rotateZ(rotZ);
+  
+  fill(255, 0, 0, 50);
+  plane(200, 200);
+  fill(0, 255, 0, 50);
+  rotateY(PI/2);
+  plane(200, 200);
+  rotateY(-PI/2);
+  fill(0, 0, 255, 50);
+  rotateX(PI/2);
+  plane(200, 200);
+  rotateX(-PI/2);
+  
+  normalMaterial();
   
   beginShape();
   stroke(200);
