@@ -49,6 +49,9 @@ if(EXISTS ${UWEB_SOCKET_LIBRARY})
   include_directories(/usr/include/uWS)
 ENDIF()
 
+add_executable(calib camera_calibration.cpp)
+target_link_libraries(calib ${OpenCV_LIBS})
+
 add_executable(opencvDemo opencv_main.cpp)
 target_link_libraries(opencvDemo ${OpenCV_LIBS})
 
