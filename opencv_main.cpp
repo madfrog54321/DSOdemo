@@ -11,11 +11,17 @@ int main() {
     cout << "cannot open camera";
   }
 
+  stream1.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+  stream1.set(CV_CAP_PROP_FRAME_WIDTH, 480);
+
   //unconditional loops
   while (true) {
-    Mat cameraFrame;
-    stream1.read(cameraFrame);
-    imshow("cam", cameraFrame);
+    Mat colorMat, grayMat;
+    std::cout << "New Frame" << std::endl;
+//    stream1.retrieve(cameraFrame);
+    stream1 >> colorMat;
+    cvtColor(colorMat, grayMat, COLOR_BGR2GRAY);
+    imshow("cam", grayMat);
     if (waitKey(30) >= 0)
       break;
   }

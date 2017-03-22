@@ -15,7 +15,7 @@
 #include "util/settings.h"
 #include "FullSystem/FullSystem.h"
 #include "util/Undistort.h"
-//#include "IOWrapper/Pangolin/PangolinDSOViewer.h"
+#include "IOWrapper/Pangolin/PangolinDSOViewer.h"
 //#include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
 
 
@@ -30,7 +30,6 @@
 std::string calib = "";
 std::string vignetteFile = "";
 std::string gammaFile = "";
-bool useSampleOutput=true;
 
 using namespace cv;
 using namespace dso;
@@ -92,7 +91,7 @@ void startServer()
 int main( int argc, char** argv )
 {
 
-  VideoCapture stream1(-1);   //0 is the id of video device.0 if you have only one camera.
+  VideoCapture stream1("/media/sf_data/test4.MP4");   //0 is the id of video device.0 if you have only one camera.
 
   if (!stream1.isOpened()) { //check if video device has been initialised
     std::cout << "cannot open camera" << std::endl;
@@ -105,9 +104,10 @@ int main( int argc, char** argv )
   vignetteFile = "";
   gammaFile = "";
   multiThreading = false;
-  disableAllDisplay = true;
-  setting_logStuff = false;
-  setting_debugout_runquiet = true;
+  disableAllDisplay = false;
+  setting_logStuff = true;
+  setting_debugout_runquiet = false;
+  setting_render_displayVideo = true;
 
 	//for(int i=1; i<argc;i++) parseArgument(argv[i]);
 
@@ -140,7 +140,14 @@ int main( int argc, char** argv )
     fullSystem = new FullSystem();
     fullSystem->linearizeOperation=false;
 
-    fullSystem->outputWrapper.push_back(new IOWrap::WebOutputWrapper(&h));
+IOWrap::PangolinDSOViewer* viewer = new IOWrap::PangolinDSOViewer(
+640,
+480, true
+);
+
+fullSystem->outputWrapper.push_back(viewer);
+
+   fullSystem->outputWrapper.push_back(new IOWrap::WebOutputWrapper(&h));
 
 
     if(undistorter->photometricUndist != 0)
@@ -149,14 +156,41 @@ int main( int argc, char** argv )
     //ros::NodeHandle nh;
     //ros::Subscriber imgSub = nh.subscribe("image", 1, &vidCb);
 
-    while(true){
-      Mat cameraFrame;
-      stream1.read(cameraFrame);
+//viewer->run();
 
-      MinimalImageB minImg((int)cameraFrame.cols, (int)cameraFrame.rows,(unsigned char*)cameraFrame.data);
+    while(true){
+      if(setting_fullResetRequested)
+    	{
+    		std::vector<IOWrap::Output3DWrapper*> wraps = fullSystem->outputWrapper;
+    		delete fullSystem;
+    		for(IOWrap::Output3DWrapper* ow : wraps) ow->reset();
+    		fullSystem = new FullSystem();
+    		fullSystem->linearizeOperation=false;
+    		fullSystem->outputWrapper = wraps;
+    	    if(undistorter->photometricUndist != 0)
+    	    	fullSystem->setGammaFunction(undistorter->photometricUndist->getG());
+    		setting_fullResetRequested=false;
+    	}
+
+      Mat colorMat, grayMat;
+      stream1.read(colorMat);
+      cvtColor(colorMat, grayMat, COLOR_BGR2GRAY);
+
+      //std::cout << "Cols: " << grayMat.cols << ", Rows: " << grayMat.rows << std::endl;
+      //normalize(grayMat, grayMat, 0, 255, NORM_MINMAX, CV_8UC1);
+
+      MinimalImageB minImg((int)grayMat.cols, (int)grayMat.rows,(unsigned char*)grayMat.data);
     	ImageAndExposure* undistImg = undistorter->undistort<unsigned char>(&minImg, 1,0, 1.0f);
     	fullSystem->addActiveFrame(undistImg, frameID);
     	frameID++;
+
+      //Mat fixedMat = Mat(480, 640, CV_32F, undistImg->image);
+      //normalize(fixedMat, fixedMat, 0, 255, NORM_MINMAX, CV_8UC1);
+
+      //imshow("cam", fixedMat);
+
+      //std::cout << fixedMat << std::endl;
+
     	delete undistImg;
 
       if(waitKey(30) >= 0)

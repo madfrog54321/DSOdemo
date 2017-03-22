@@ -122,7 +122,15 @@ uWS::Hub* h;
             std::cout << "Y: " << frame->camToWorld.matrix3x4()(1, 3) << std::endl;
             std::cout << "Z: " << frame->camToWorld.matrix3x4()(2, 3) << std::endl;
 */
-            std::string message = std::to_string(frame->camToWorld.matrix3x4()(0, 3)) + "," + std::to_string(frame->camToWorld.matrix3x4()(1, 3)) + "," + std::to_string(frame->camToWorld.matrix3x4()(2, 3));
+            float rotX = atan2(frame->camToWorld.matrix3x4()(2, 1), frame->camToWorld.matrix3x4()(2, 2));
+            float rotY = atan2(-frame->camToWorld.matrix3x4()(2, 0), sqrt(pow(frame->camToWorld.matrix3x4()(2, 1), 2) + pow(frame->camToWorld.matrix3x4()(2, 2), 2)));
+            float rotZ = atan2(frame->camToWorld.matrix3x4()(1, 0), frame->camToWorld.matrix3x4()(0, 0));
+
+            std::string message = std::to_string(frame->camToWorld.matrix3x4()(0, 3)) + "," +
+            std::to_string(frame->camToWorld.matrix3x4()(1, 3)) + "," +
+            std::to_string(frame->camToWorld.matrix3x4()(2, 3)) + "," +
+            std::to_string(rotX) + "," + std::to_string(rotY) + "," + std::to_string(rotZ);
+
             h->getDefaultGroup<uWS::SERVER>().broadcast(message.c_str(), message.length(), uWS::TEXT);
 
             //std::cout << "========== Pose End =========" << std::endl;
@@ -132,6 +140,7 @@ uWS::Hub* h;
         virtual void pushLiveFrame(FrameHessian* image)
         {
             // can be used to get the raw image / intensity pyramid.
+            std::cout << image->debugImage << std::endl;
         }
 
         virtual void pushDepthImage(MinimalImageB3* image)

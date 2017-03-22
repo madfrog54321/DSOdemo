@@ -9,7 +9,8 @@ set(CMAKE_CXX_FLAGS
    "${SSE_FLAGS} -O3 -g -std=c++0x -march=native -pthread"
 #   "${SSE_FLAGS} -O3 -g -std=c++0x -fno-omit-frame-pointer"
 )
-set(DSO_LIBRARY /mnt/c/Users/konno/Documents/GitKraken/DSOdemo/dso/build/lib/libdso.a)
+#set(DSO_LIBRARY ~/dso/build/lib/libdso.a)
+find_path(DSO_LIBRARY libdso.a ../../dso/build/lib)
 set(UWEB_SOCKET_LIBRARY /usr/lib/libuWS.so)
 set(LibZip_DIR cmake)
 
@@ -18,6 +19,9 @@ find_package(Eigen3 QUIET)
 find_package(Boost COMPONENTS system thread QUIET)
 find_package(LibZip QUIET)
 find_package(OpenCV QUIET)
+find_package(Pangolin REQUIRED)
+
+include_directories(${Pangolin_INLUDE_DIRS})
 
 if(ZLIB_FOUND)
   message("ZLIB found!")
@@ -52,14 +56,14 @@ ENDIF()
 add_executable(calib camera_calibration.cpp)
 target_link_libraries(calib ${OpenCV_LIBS})
 
-add_executable(opencvDemo opencv_main.cpp)
-target_link_libraries(opencvDemo ${OpenCV_LIBS})
+#add_executable(opencvDemo opencv_main.cpp)
+#target_link_libraries(opencvDemo ${OpenCV_LIBS})
 
-add_executable(webDemo demo_main.cpp WebOutputWrapper.cpp)
-target_link_libraries(webDemo ${DSO_LIBRARY} ${UWEB_SOCKET_LIBRARY} ${LIBZIP_LIBRARY} ${OpenCV_LIBS} boost_system boost_thread -lssl -lcrypt ${ZLIB_LIBRARIES})
+#add_executable(webDemo demo_main.cpp WebOutputWrapper.cpp)
+#target_link_libraries(webDemo ${DSO_LIBRARY} ${UWEB_SOCKET_LIBRARY} ${LIBZIP_LIBRARY} ${OpenCV_LIBS} boost_system boost_thread -lssl -lcrypt ${ZLIB_LIBRARIES})
 
-add_executable(socketDemo main.cpp)
-target_link_libraries(socketDemo /usr/lib/libuWS.so ${ZLIB_LIBRARIES} -lssl -lcrypt boost_system)
+#add_executable(socketDemo main.cpp)
+#target_link_libraries(socketDemo /usr/lib/libuWS.so ${ZLIB_LIBRARIES} -lssl -lcrypt boost_system)
 
 add_executable(liveDemo opencv_dso_main.cpp WebOutputWrapper.cpp)
-target_link_libraries(liveDemo ${DSO_LIBRARY} ${UWEB_SOCKET_LIBRARY} ${LIBZIP_LIBRARY} ${OpenCV_LIBS} boost_system boost_thread -lssl -lcrypt ${ZLIB_LIBRARIES})
+target_link_libraries(liveDemo ${DSO_LIBRARY} ${UWEB_SOCKET_LIBRARY} ${Pangolin_LIBRARIES} ${LIBZIP_LIBRARY} ${OpenCV_LIBS} boost_system boost_thread -lssl -lcrypt ${ZLIB_LIBRARIES})
